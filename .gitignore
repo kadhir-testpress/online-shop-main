@@ -1,0 +1,34 @@
+# Ignore compiled Python files
+*.pyc
+__pycache__/
+
+# Ignore environment-specific settings
+.env
+
+# Ignore Django migration files
+**/migrations/*.py
+**/migrations/*.pyc
+
+# Ignore database files
+*.sqlite3
+
+# Ignore static files
+staticfiles/
+
+# Ignore media files (uploaded by users)
+media/
+
+# Ignore secret key files
+*.key
+
+# Ignore any log files
+*.log
+
+# Ignore the virtual environment folder
+venv/
+
+# Ignore Pillow thumbnail files
+media/*/thumbnails/
+
+# Ignore .DS_Store (macOS system file)
+.DS_Store
