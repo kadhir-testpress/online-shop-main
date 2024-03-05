@@ -2,7 +2,7 @@ from django.shortcuts import render
 from .models import OrderItem
 from .forms import OrderCreateForm
 from cart.cart import Cart
-from .tasks import order_created
+from .tasks import send_order_confirmation_email
 # Create your views here.
 def order_create(request):
     cart = Cart(request)
@@ -16,7 +16,7 @@ def order_create(request):
                                          price=item['price'],
                                          quantity=item['quantity'])
             cart.clear()
-            order_created.delay(order.id)
+            send_order_confirmation_email.delay(order.id)
             return render(request,
                           'orders/order/created.html',
                           {'order': order})
