@@ -21,6 +21,9 @@ def order_create(request):
             send_order_confirmation_email.delay(order.id)
             request.session['order_id'] = order.id
             return redirect(reverse('payment:process'))
+            return render(request,
+                          'orders/order/created.html',
+                          {'order': order})
     else:
         form = OrderCreateForm()
     return render(request,
