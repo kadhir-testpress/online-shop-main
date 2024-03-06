@@ -9,9 +9,27 @@ redis_database = redis.Redis(
         )
 
 class Recommender(object):
-    def _get_product_key(self, product_id):
-        return f'product:{product_id}:purchased_with'
+    def record_products_purchased(self, products):
+        product_ids = [p.id for p in products]
+        self._update_purchased_together_scores(product_ids)
+    
+    def get_product_recommendations(self, products, max_results=1):
+        product_ids = [p.id for p in products]
 
+        if len(products) == 1:
+            suggestions = self._get_single_product_suggestions(product_ids[0], max_results)
+        else:
+            suggestions = self._get_multiple_product_suggestions(product_ids, max_results)
+
+        suggested_products_ids = self._get_suggested_product_ids(suggestions)
+        suggested_products = self._get_suggested_products(suggested_products_ids)
+
+        return suggested_products
+    
+    def clear_purchase_history(self):
+        for product_id in Product.objects.values_list('id', flat=True):
+            redis_database.delete(self._get_product_key(product_id))
+            
     def _update_purchased_together_scores(self, product_ids):
         for product_id in product_ids:
             for with_id in product_ids:
@@ -21,7 +39,7 @@ class Recommender(object):
                         1,
                         with_id
                     )
-
+    
     def _get_single_product_suggestions(self, product_id, max_results):
         return redis_database.zrange(
             self._get_product_key(product_id),
@@ -42,32 +60,17 @@ class Recommender(object):
 
         redis_database.delete(tmp_key)
         return suggestions
-
+    
     def _get_suggested_product_ids(self, suggestions):
         return [int(id) for id in suggestions]
-
+    
     def _get_suggested_products(self, suggested_products_ids):
         suggested_products = list(Product.objects.filter(id__in=suggested_products_ids))
         suggested_products.sort(key=lambda x: suggested_products_ids.index(x.id))
         return suggested_products
 
-    def record_products_purchased(self, products):
-        product_ids = [p.id for p in products]
-        self._update_purchased_together_scores(product_ids)
+    def _get_product_key(self, product_id):
+        return f'product:{product_id}:purchased_with'
+    
 
-    def get_product_recommendations(self, products, max_results=1):
-        product_ids = [p.id for p in products]
-
-        if len(products) == 1:
-            suggestions = self._get_single_product_suggestions(product_ids[0], max_results)
-        else:
-            suggestions = self._get_multiple_product_suggestions(product_ids, max_results)
-
-        suggested_products_ids = self._get_suggested_product_ids(suggestions)
-        suggested_products = self._get_suggested_products(suggested_products_ids)
-
-        return suggested_products
-
-    def clear_purchase_history(self):
-        for product_id in Product.objects.values_list('id', flat=True):
-            redis_database.delete(self._get_product_key(product_id))
+    
