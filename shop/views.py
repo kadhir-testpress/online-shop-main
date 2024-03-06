@@ -29,8 +29,8 @@ def product_detail(request, id, slug):
                                 available=True)
     cart_product_form = CartAddProductForm()
 
-    r = Recommender()
-    recommended_products = r.suggest_products_for([product], 1)
+    recommender = Recommender()
+    recommended_products = recommender.get_product_recommendations([product], 1)
     return render(request,
                   'shop/product/detail.html',
                   {'product': product,
